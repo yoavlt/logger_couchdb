@@ -48,6 +48,7 @@ defmodule LoggerCouchdb do
 
   defp start_db(%{url: url, database: database}) do
     Couchdb.start(url)
+    {:ok, _} = Database.use_or_create(database)
   end
 
   defp configure(name, opts) do
