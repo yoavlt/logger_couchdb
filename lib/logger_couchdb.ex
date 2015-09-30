@@ -35,9 +35,19 @@ defmodule LoggerCouchdb do
   end
 
   defp log_event(level, msg, ts, md, %{metadata: metadata} = state) do
+    start_db(state)
     %{level: level, msg: msg, ts: ts, md: md, metadata: metadata}
     |> Document.save
     {:ok, state}
+  end
+
+  defp start_db(%{url: nil, database: database}) do
+    Couchdb.start
+    {:ok, _} = Database.use_or_create(database)
+  end
+
+  defp start_db(%{url: url, database: database}) do
+    Couchdb.start(url)
   end
 
   defp configure(name, opts) do
@@ -49,14 +59,6 @@ defmodule LoggerCouchdb do
     database = Keyword.get(opts, :database, "logger_couchdb")
     level    = Keyword.get(opts, :level)
     metadata = Keyword.get(opts, :metadata, [])
-
-    if url != nil do
-      Couchdb.start(url)
-    else
-      Couchdb.start
-    end
-
-    {:ok, _} = Database.use_or_create(database)
 
     %{name: name, url: url, level: level, metadata: metadata}
   end
