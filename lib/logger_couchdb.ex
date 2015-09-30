@@ -34,8 +34,8 @@ defmodule LoggerCouchdb do
     end
   end
 
-  defp log_event(level, msg, ts, md, state) do
-    %{level: level, msg: msg, ts: ts, md: md, state: state}
+  defp log_event(level, msg, ts, md, %{metadata: metadata} = state) do
+    %{level: level, msg: msg, ts: ts, md: md, metadata: metadata}
     |> Document.save
     {:ok, state}
   end
@@ -49,7 +49,6 @@ defmodule LoggerCouchdb do
     database = Keyword.get(opts, :database, "logger_couchdb")
     level    = Keyword.get(opts, :level)
     metadata = Keyword.get(opts, :metadata, [])
-    format   = Keyword.get(opts, :format, @default_format) |> Logger.Formatter.compile
 
     if url != nil do
       Couchdb.start(url)
