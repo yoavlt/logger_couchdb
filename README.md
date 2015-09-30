@@ -1,4 +1,4 @@
 LoggerCouchdb
 =============
 
-** TODO: Add description **
+CouchDB logger driver for Elixir

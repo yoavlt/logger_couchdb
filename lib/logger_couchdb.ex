@@ -13,7 +13,6 @@ defmodule LoggerCouchdb do
     {:ok, configure(name, [])}
   end
 
-
   def handle_call({:configure, opts}, %{name: name}) do
     {:ok, :ok, configure(name, opts)}
   end
