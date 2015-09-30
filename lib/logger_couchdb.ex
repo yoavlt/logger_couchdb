@@ -61,6 +61,6 @@ defmodule LoggerCouchdb do
     level    = Keyword.get(opts, :level)
     metadata = Keyword.get(opts, :metadata, [])
 
-    %{name: name, url: url, level: level, metadata: metadata}
+    %{name: name, url: url, database: database, level: level, metadata: metadata}
   end
 end
