@@ -48,8 +48,9 @@ defmodule LoggerCouchdb do
     {:ok, state}
   end
 
-  defp format_log(level, msg, ts, md, %{format: format, metadata: metadata}) do
+  def format_log(level, msg, ts, md, %{format: format, metadata: metadata}) do
     Logger.Formatter.format(format, level, msg, ts, Dict.take(md, metadata))
+    |> IO.chardata_to_string
   end
 
   defp start_db(%{url: nil, database: database}) do
