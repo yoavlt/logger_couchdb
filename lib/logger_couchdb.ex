@@ -9,6 +9,8 @@ defmodule LoggerCouchdb do
   @type level     :: Logger.level
   @type metadata  :: [atom]
 
+  @default_format "$time $metadata[$level] $message"
+
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
   end
@@ -26,6 +28,11 @@ defmodule LoggerCouchdb do
     {:ok, {:ok, info}, state}
   end
 
+  def handle_call({:database, database}, state) do
+    new_state = Dict.put(:database, database)
+    {:ok, {:ok, new_state}, new_state}
+  end
+
   def handle_event({level, _gl, {Logger, msg, ts, md}}, %{level: min_level} = state) do
     if is_nil(min_level) or Logger.compare_levels(level, min_level) != :lt do
       log_event(level, msg, ts, md, state)
@@ -34,21 +41,25 @@ defmodule LoggerCouchdb do
     end
   end
 
-  defp log_event(level, msg, ts, md, %{metadata: metadata} = state) do
+  def log_event(level, msg, ts, md, state) do
     start_db(state)
-    %{level: level, msg: msg, ts: ts, md: md, metadata: metadata}
+    %{level: level, log: format_log(level, msg, ts, md, state)}
     |> Document.save
     {:ok, state}
   end
 
+  defp format_log(level, msg, ts, md, %{format: format, metadata: metadata}) do
+    Logger.Formatter.format(format, level, msg, ts, Dict.take(md, metadata))
+  end
+
   defp start_db(%{url: nil, database: database}) do
     Couchdb.start
-    {:ok, _} = Database.use_or_create(database)
+    Database.use_or_create(database)
   end
 
   defp start_db(%{url: url, database: database}) do
     Couchdb.start(url)
-    {:ok, _} = Database.use_or_create(database)
+    Database.use_or_create(database)
   end
 
   defp configure(name, opts) do
@@ -60,7 +71,8 @@ defmodule LoggerCouchdb do
     database = Keyword.get(opts, :database, "logger_couchdb")
     level    = Keyword.get(opts, :level)
     metadata = Keyword.get(opts, :metadata, [])
+    format   = Keyword.get(opts, :format, @default_format) |> Logger.Formatter.compile
 
-    %{name: name, url: url, database: database, level: level, metadata: metadata}
+    %{name: name, url: url, database: database, level: level, metadata: metadata, format: format}
   end
 end
